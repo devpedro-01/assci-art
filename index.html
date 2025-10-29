@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Video Player</title>
+  <style>
+    body {
+      background-color: black;
+      color: lime;
+      font-family: monospace;
+      white-space: pre;
+      text-align: center;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    pre {
+      font-size: 8px;
+      line-height: 6px;
+    }
+
+    video {
+      display: none;
+    }
+
+    #start {
+      position: absolute;
+      color: white;
+      background: rgba(0,0,0,0.8);
+      border: 1px solid lime;
+      padding: 20px 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 20px;
+    }
+
+    #start:hover {
+      background: lime;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <pre id="ascii">Clique para começar</pre>
+  <div id="start">▶ Iniciar vídeo</div>
+  <video id="video" src="vid.mp4" crossorigin="anonymous"></video>
+
+  <script>
+    const video = document.getElementById("video");
+    const asciiContainer = document.getElementById("ascii");
+    const startButton = document.getElementById("start");
+
+    const asciiChars = " .:-=+*#%@";
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const width = 80; // largura em caracteres
+    const fps = 30;
+    const frameDelay = 1000 / fps;
+
+    function frameToAscii() {
+      if (video.paused || video.ended) return;
+
+      const height = Math.max(1, Math.floor(video.videoHeight * width / video.videoWidth / 2));
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(video, 0, 0, width, height);
+      const frame = ctx.getImageData(0, 0, width, height);
+      const pixels = frame.data;
+      let ascii = "";
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          const brightness = (r + g + b) / 3;
+          const index = Math.floor(brightness / 255 * (asciiChars.length - 1));
+          ascii += asciiChars[index];
+        }
+        ascii += "\n";
+      }
+
+      asciiContainer.textContent = ascii;
+      setTimeout(frameToAscii, frameDelay);
+    }
+
+    startButton.addEventListener("click", () => {
+      startButton.style.display = "none";
+      video.play();
+      frameToAscii();
+    });
+  </script>
+</body>
+</html>
